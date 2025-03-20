@@ -2,4 +2,5 @@ build
 solver
 .cache
 Results
+!mat/*.dat
 
