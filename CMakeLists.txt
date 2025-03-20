@@ -33,6 +33,8 @@ else()
     message(STATUS "Eigen found in system. Using installed version.")
 endif()
 
+message(STATUS "Eigen include dir: ${EIGEN3_INCLUDE_DIR}")
+
 add_executable(solver
     main.cpp
     functions/func.cpp
