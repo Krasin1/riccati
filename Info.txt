@@ -1,0 +1,28 @@
+На windows я не знаю как собирать и компилировать программы, поэтому руководство только под linux.
+Требования:
+    gcc
+    cmake
+    eigen - для работы с матрицами, если не установлен, то должен будет скачаться при сборке
+    git - чтобы скачать eigen если он не установлен
+    openmp - для параллельного вычисления
+
+Чтобы получить исполняемый файл нужно запустить 
+    ./build.sh
+
+Чтобы запустить программу :
+    ./solver
+
+Программу можно скомпилировать этой командой
+    g++ -std=c++17 -O3 -fopenmp -I/path/to/eigen -o solver main.cpp functions/func.cpp methods/solver.cpp methods/runge/runge.cpp methods/adams/adams.cpp methods/felberg/felberg.cpp methods/hemming/hemming.cpp methods/inglend/inglend.cpp methods/milna/milna.cpp methods/nystrom/nystrom.cpp
+
+Где 
+    -fopenmp - флаг для добавления многопоточности
+    -I/path/to/eigen - путь к папке c eigen
+
+
+Матрицы должны лежать по пути относительно исполняемого файла:
+    !mat/A.dat
+    !mat/B.dat
+    !mat/E.dat
+    !mat/Q.dat
+
