@@ -29,8 +29,15 @@ int main(int argc, char* argv[]) {
         // ввод из терминала
         input_data(t0, t_max, h, target_error);
 
-        // Создаём решатель
-        FelbergSolver solver(E, A, B, Q, initial_P);
+        // Список методов
+        //  - FelbergSolver 
+        //  - InglendSolver 
+        //  - NystromSolver 
+        //  - HemmingSolver
+        //  - RungeKuttaSolver
+        //  - AdamsSolver
+        //  - MilnaSolver
+        NystromSolver solver(E, A, B, Q, initial_P);
 
         // Замеры времени
         auto begin = std::chrono::system_clock::now();

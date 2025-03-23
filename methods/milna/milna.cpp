@@ -3,18 +3,20 @@
 #include "../../functions/func.h"
 
 extern bool draw;
+extern bool manual;
 
 SolverResult MilnaSolver::solve(double t0, double t_max, double h,
                                 double target_error) {
     Eigen::MatrixXd P = initial_P;
     Eigen::MatrixXd P_previous = P;
+
     int step = 0;
     double error = std::numeric_limits<double>::max();
 
     // если draw == true, то сохраняем точки для графика
     std::vector<double>* points = draw ? new std::vector<double>() : nullptr;
 
-    // получаем 4 разгонные точки 
+    // получаем 4 разгонные точки
     std::deque<Eigen::MatrixXd> prev_points = acceleration_points(4, h);
 
     while (step < 200 && error > target_error) {
@@ -38,11 +40,9 @@ SolverResult MilnaSolver::solve(double t0, double t_max, double h,
             prev_points.pop_back();
             prev_points.push_front(P);
         }
-
         // значение ошибки на каждом шагу для графика
         if (draw) points->push_back(error);
 
-        // error = (P - P_previous).array().abs().maxCoeff();
         error = (P - P_previous).norm();
         step++;
     }

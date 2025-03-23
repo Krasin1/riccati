@@ -42,7 +42,6 @@ SolverResult NystromSolver::solve(double t0, double t_max, double h,
         // значение ошибки на каждом шагу для графика
         if (draw) points->push_back(error);
 
-        // error = (P - P_previous).array().abs().maxCoeff();
         error = (P - P_previous).norm();
         step++;
     }
