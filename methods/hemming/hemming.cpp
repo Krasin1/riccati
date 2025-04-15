@@ -5,7 +5,7 @@
 extern bool draw;
 
 SolverResult HemmingSolver::solve(double t0, double t_max, double h,
-                                  double target_error) {
+                                  double target_error, int max_steps) {
     Eigen::MatrixXd P = initial_P;
     Eigen::MatrixXd P_previous = P;
     int step = 0;
@@ -14,16 +14,15 @@ SolverResult HemmingSolver::solve(double t0, double t_max, double h,
     // если draw == true, то сохраняем точки для графика
     std::vector<double>* points = draw ? new std::vector<double>() : nullptr;
 
-    std::deque<Eigen::MatrixXd> prev_points = acceleration_points(4, h);
+    while (step < max_steps && error > target_error) {
+        std::deque<Eigen::MatrixXd> prev_points = acceleration_points(4, h, P);
 
-    while (step < 200 && error > target_error) {
         P_previous = P;
-
         for (double t = t0; t < t_max; t += h) {
             progress(target_error, error, t, h, step, t_max, P);
 
-            P = (0.5 * (prev_points[0] + prev_points[1])) +
-                (h / 48.0) * (119 * riccati_equation(prev_points[0]) -
+            P = (0.5 * (P + prev_points[1])) +
+                (h / 48.0) * (119 * riccati_equation(P) -
                               99 * riccati_equation(prev_points[1]) +
                               69 * riccati_equation(prev_points[2]) -
                               17 * riccati_equation(prev_points[3]));
@@ -38,11 +37,10 @@ SolverResult HemmingSolver::solve(double t0, double t_max, double h,
             prev_points.pop_back();
             prev_points.push_front(P);
         }
-
+        error = (P - P_previous).norm();
         // значение ошибки на каждом шагу для графика
         if (draw) points->push_back(error);
 
-        error = (P - P_previous).norm();
         step++;
     }
 

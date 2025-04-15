@@ -5,7 +5,7 @@
 extern bool draw;
 
 SolverResult RungeKuttaSolver::solve(double t0, double t_max, double h,
-                                     double target_error) {
+                                     double target_error, int max_steps) {
     Eigen::MatrixXd P = initial_P;
     Eigen::MatrixXd P_previous = P;
     int step = 0;
@@ -14,7 +14,7 @@ SolverResult RungeKuttaSolver::solve(double t0, double t_max, double h,
     // если draw == true, то сохраняем точки для графика
     std::vector<double>* points = draw ? new std::vector<double>() : nullptr;
 
-    while (step < 200 && error > target_error) {
+    while (step < max_steps && error > target_error) {
         P_previous = P;
 
         for (double t = t0; t < t_max; t += h) {
@@ -34,11 +34,10 @@ SolverResult RungeKuttaSolver::solve(double t0, double t_max, double h,
                 throw std::runtime_error(message);
             }
         }
-
+        error = (P - P_previous).norm();
         // значение ошибки на каждом шагу для графика
         if (draw) points->push_back(error);
 
-        error = (P - P_previous).norm();
         step++;
     }
 

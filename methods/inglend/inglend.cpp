@@ -5,7 +5,7 @@
 extern bool draw;
 
 SolverResult InglendSolver::solve(double t0, double t_max, double h,
-                                     double target_error) {
+                                  double target_error, int max_steps) {
     Eigen::MatrixXd P = initial_P;
     Eigen::MatrixXd P_previous = P;
     int step = 0;
@@ -14,7 +14,7 @@ SolverResult InglendSolver::solve(double t0, double t_max, double h,
     // если draw == true, то сохраняем точки для графика
     std::vector<double>* points = draw ? new std::vector<double>() : nullptr;
 
-    while (step < 200 && error > target_error) {
+    while (step < max_steps && error > target_error) {
         P_previous = P;
 
         for (double t = t0; t < t_max; t += h) {
@@ -23,7 +23,7 @@ SolverResult InglendSolver::solve(double t0, double t_max, double h,
             Eigen::MatrixXd k1 = riccati_equation(P);
             Eigen::MatrixXd k2 = riccati_equation(P + (k1 * (h / 2.0)));
             Eigen::MatrixXd k3 = riccati_equation(P + (h / 4.0) * (k1 + k2));
-            Eigen::MatrixXd k4 = riccati_equation(P + h * (2 * k3 - k2));          
+            Eigen::MatrixXd k4 = riccati_equation(P + h * (2 * k3 - k2));
 
             P += (h / 6.0) * (k1 + 4 * k3 + k4);
 
@@ -34,11 +34,10 @@ SolverResult InglendSolver::solve(double t0, double t_max, double h,
                 throw std::runtime_error(message);
             }
         }
-
+        error = (P - P_previous).norm();
         // значение ошибки на каждом шагу для графика
         if (draw) points->push_back(error);
 
-        error = (P - P_previous).norm();
         step++;
     }
 

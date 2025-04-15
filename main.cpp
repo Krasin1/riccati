@@ -25,6 +25,7 @@ int main(int argc, char* argv[]) {
         double t_max = 10.0;
         double h = 0.1;
         double target_error = 0.001;
+        int max_steps = 200;
 
         // ввод из терминала
         input_data(t0, t_max, h, target_error);
@@ -37,13 +38,13 @@ int main(int argc, char* argv[]) {
         //  - RungeKuttaSolver
         //  - AdamsSolver
         //  - MilnaSolver
-        NystromSolver solver(E, A, B, Q, initial_P);
+        MilnaSolver solver(E, A, B, Q, initial_P);
 
         // Замеры времени
         auto begin = std::chrono::system_clock::now();
 
         // Решаем
-        SolverResult result = solver.solve(t0, t_max, h, target_error);
+        SolverResult result = solver.solve(t0, t_max, h, target_error, max_steps);
 
         auto end = std::chrono::system_clock::now();
         auto duration =

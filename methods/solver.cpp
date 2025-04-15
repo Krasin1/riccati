@@ -8,7 +8,7 @@
 namespace fs = std::filesystem;
 
 // Наше матричное уравнение Риккати
-Eigen::MatrixXd RiccatiSolver::riccati_equation(const Eigen::MatrixXd& P) {
+inline Eigen::MatrixXd RiccatiSolver::riccati_equation(const Eigen::MatrixXd& P) {
     return E * P * A + A.transpose() * P * E + Q - E * P * BRB * P * E;
 }
 
@@ -33,21 +33,24 @@ Eigen::MatrixXd RiccatiSolver::verify_solution(const Eigen::MatrixXd& P) {
 }
 
 // С помощью метода Рунге-Кутты получаем начальные точки для некоторых методов
-std::deque<Eigen::MatrixXd> RiccatiSolver::acceleration_points(int count,
-                                                               double h) {
+std::deque<Eigen::MatrixXd> RiccatiSolver::acceleration_points(int count, double h, Eigen::MatrixXd& P_initial) {
     std::deque<Eigen::MatrixXd> result;
     Eigen::MatrixXd k1, k2, k3, k4;
 
-    result.push_front(initial_P);
-    for (int i = 1; i < count; i++) {
-        k1 = riccati_equation(initial_P);
-        k2 = riccati_equation(initial_P + (k1 * h / 2.0));
-        k3 = riccati_equation(initial_P + (k2 * h / 2.0));
-        k4 = riccati_equation(initial_P + (k3 * h));
+    for (int i = 0; i < count; i++) {
+        k1 = h * riccati_equation(P_initial);
+        k2 = h * riccati_equation(P_initial + (k1 / 2.0));
+        k3 = h * riccati_equation(P_initial + (k2 / 2.0));
+        k4 = h * riccati_equation(P_initial + (k3));
 
-        initial_P += (k1 + 2.0 * k2 + 2.0 * k3 + k4) * (h / 6.0);
-        result.push_front(initial_P);
+        P_initial += ((k1 + 2.0 * k2 + 2.0 * k3 + k4) / 36.0);
+        result.push_front(P_initial);
     }
 
     return result;
 }
+
+std::deque<Eigen::MatrixXd> RiccatiSolver::acceleration_points(int count, double h) {
+    return acceleration_points(count, h, initial_P);
+}
+
