@@ -37,15 +37,15 @@ message(STATUS "Eigen include dir: ${EIGEN3_INCLUDE_DIR}")
 
 add_executable(solver
     main.cpp
-    functions/func.cpp
-    methods/solver.cpp
-    methods/runge/runge.cpp
-    methods/adams/adams.cpp
-    methods/felberg/felberg.cpp
-    methods/hemming/hemming.cpp
-    methods/inglend/inglend.cpp
-    methods/milna/milna.cpp
-    methods/nystrom/nystrom.cpp
+    core/func.cpp
+    core/solver.cpp
+    methods/runge.cpp
+    methods/adams.cpp
+    methods/felberg.cpp
+    methods/hemming.cpp
+    methods/inglend.cpp
+    methods/milna.cpp
+    methods/nystrom.cpp
 )
 
 target_link_libraries(solver PUBLIC Eigen3::Eigen)

@@ -1,8 +1,8 @@
-#ifndef FUNC_H
-#define FUNC_H
+#ifndef FUNC_HPP
+#define FUNC_HPP
 
-#include <chrono>
 #include <Eigen/Dense>
+#include <chrono>
 #include <string>
 
 // Функция для чтения матрицы из файла
@@ -29,5 +29,8 @@ void show_results(double t0, double t_max, double h, double target_error,
 
 // Рисует график если флаг draw == true
 void draw_graph(std::vector<double>* error);
+
+// проверяем матрицу на заполнение -nan
+void check_nan(const Eigen::MatrixXd& P, int step, double t);
 
 #endif  // !FUNC_H

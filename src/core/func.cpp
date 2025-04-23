@@ -1,4 +1,4 @@
-#include "func.h"
+#include "func.hpp"
 
 #include <chrono>
 #include <filesystem>
@@ -113,7 +113,7 @@ void input_data(double& t_0, double& t_max, double& h, double& error) {
 void show_results(double t_0, double t_max, double h, double target_error,
                   double error, double steps,
                   std::chrono::milliseconds elapsed_time, Eigen::MatrixXd& P) {
-    fs::path folder_path = "Results";
+    fs::path folder_path = "results";
     fs::path result_file_path = folder_path / "output.txt";
 
     if (!fs::exists(folder_path)) fs::create_directory(folder_path);
@@ -169,5 +169,14 @@ void set_flags(int argc, char* argv[]) {
         } else if (arg == "manual") {
             manual = true;
         }
+    }
+}
+
+void check_nan(const Eigen::MatrixXd& P, int step, double t) {
+    if (std::isnan(P(0, 0))) {
+        std::string message =
+            "Матрица P заполнилась -nan\nШаг : " + std::to_string(step) +
+            " | t : " + std::to_string(t) + "\n";
+        throw std::runtime_error(message);
     }
 }

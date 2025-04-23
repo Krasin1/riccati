@@ -21,8 +21,8 @@
 
 
 Матрицы должны лежать по пути относительно исполняемого файла:
-    !mat/A.dat
-    !mat/B.dat
-    !mat/E.dat
-    !mat/Q.dat
+    data/A.dat
+    data/B.dat
+    data/E.dat
+    data/Q.dat
 

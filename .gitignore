@@ -1,6 +1,7 @@
-build
+.build
 solver
 .cache
-Results
-!mat/*.dat
+results
+data/*.dat
 *.pdf
+compile_commands.json

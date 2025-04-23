@@ -1,8 +1,8 @@
 #include <iostream>
 #include <thread>
 
-#include "functions/func.h"
-#include "methods/methods.h"
+#include "core/func.hpp"
+#include "methods/methods.hpp"
 
 bool draw = false;
 bool manual = false;
@@ -14,10 +14,10 @@ int main(int argc, char* argv[]) {
         // включаем многопоток
         Eigen::setNbThreads(std::thread::hardware_concurrency());
 
-        Eigen::MatrixXd E = read_matrix_from_file("!mat/E.dat");
-        Eigen::MatrixXd A = read_matrix_from_file("!mat/A.dat");
-        Eigen::MatrixXd B = read_matrix_from_file("!mat/B.dat");
-        Eigen::MatrixXd Q = read_matrix_from_file("!mat/Q.dat");
+        Eigen::MatrixXd E = read_matrix_from_file("data/E.dat");
+        Eigen::MatrixXd A = read_matrix_from_file("data/A.dat");
+        Eigen::MatrixXd B = read_matrix_from_file("data/B.dat");
+        Eigen::MatrixXd Q = read_matrix_from_file("data/Q.dat");
         Eigen::MatrixXd initial_P = Eigen::MatrixXd::Zero(E.rows(), E.cols());
 
         // Параметры интегрирования
@@ -31,20 +31,20 @@ int main(int argc, char* argv[]) {
         input_data(t0, t_max, h, target_error);
 
         // Список методов
-        //  - FelbergSolver 
-        //  - InglendSolver 
-        //  - NystromSolver 
+        //  - FelbergSolver
+        //  - InglendSolver
+        //  - NystromSolver
         //  - HemmingSolver
         //  - RungeKuttaSolver
         //  - AdamsSolver
         //  - MilnaSolver
-        MilnaSolver solver(E, A, B, Q, initial_P);
+        FelbergSolver solver(E, A, B, Q, initial_P);
 
         // Замеры времени
         auto begin = std::chrono::system_clock::now();
 
         // Решаем
-        SolverResult result = solver.solve(t0, t_max, h, target_error, max_steps);
+        Result result = solver.solve(t0, t_max, h, target_error, max_steps);
 
         auto end = std::chrono::system_clock::now();
         auto duration =
@@ -60,7 +60,6 @@ int main(int argc, char* argv[]) {
 
         // Рисуем график если передали агрумент draw при запуске программы
         if (draw) draw_graph(result.points);
-
     } catch (std::exception& e) {
         std::cout << e.what() << '\n';
     }
