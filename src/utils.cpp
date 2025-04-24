@@ -1,14 +1,14 @@
-#include "func.hpp"
+#include "include/utils.hpp"
 
+#include <CLI/CLI.hpp>
+#include <Eigen/Dense>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <string>
 
 namespace fs = std::filesystem;
-
-extern bool draw;
-extern bool manual;
 
 // Ввод одной матрицы в файл
 Eigen::MatrixXd read_matrix_from_file(const std::string& filepath) {
@@ -41,19 +41,20 @@ Eigen::MatrixXd read_matrix_from_file(const std::string& filepath) {
     return mat;
 }
 // Вывод прогресса раз в 2 секунды
-void progress(double target_error, double error, double t, double h, int step,
-              double t_max, Eigen::MatrixXd& P) {
+void progress(Config cfg, double error, int step, double t,
+              Eigen::MatrixXd& P) {
     static auto start_time = std::chrono::system_clock::now();
     auto current_time = std::chrono::system_clock::now();
     auto elapsed_time = std::chrono::duration_cast<std::chrono::seconds>(
         current_time - start_time);
 
-    if (manual || elapsed_time.count() >= 2) {
+    if (cfg.manual || elapsed_time.count() >= 2) {
         std::cout << "\033[H\033[2J";
-        std::cout << "Требуемая ошибка: " << target_error
-                  << " | Ошибка: " << error << "\t\r\nh: " << h
-                  << " | Шаг : " << step << " | t : " << t << " из " << t_max
-                  << "\t\t\n";
+        std::cout << "Метод: " << cfg.method
+                  << " | Требуемая ошибка: " << cfg.target_error
+                  << " | Ошибка: " << error << "\t\r\nh: " << cfg.h
+                  << " | Шаг : " << step << " | t : " << t << " из "
+                  << cfg.t_max << "\t\t\n";
 
         std::cout << "P(первые 8x8 элементов):\n";
         int rows_to_show = std::min(static_cast<int>(P.rows()), 8);
@@ -70,48 +71,14 @@ void progress(double target_error, double error, double t, double h, int step,
     }
 
     int ch;
-    while (manual) {
+    while (cfg.manual) {
         ch = std::cin.get();
         if (ch == '\n') break;
     }
 }
 
-// Ввод числа с обработкой
-template <class T>
-T input_number(const std::string& message, const std::string& letter) {
-    T a;
-    while (true) {
-        std::cout << message << " " << letter << ": ";
-        if (std::cin >> a && a >= 0) {
-            break;
-        } else {
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        }
-    }
-    return a;
-}
-
-// ввод параметров интегрирования из терминала
-void input_data(double& t_0, double& t_max, double& h, double& error) {
-    // t_0 = input_number<double>("\033[2J\033[HВведите начальное время", "t");
-    // t_max =
-    //     input_number<double>("\033[2J\033[HВведите конечное время", "t_max");
-    h = input_number<double>("\033[2J\033[HВведите шаг", "h");
-    if (h <= 0) {
-        std::cout << "Шаг не может быть <= 0\n";
-        exit(1);
-    }
-    error = input_number<double>("\033[2J\033[HВведите необходимую ошибку", "");
-    if (error <= 0) {
-        std::cout << "Точность должна быть больше нуля\n";
-        exit(1);
-    }
-}
-
 // записывает результаты в файл и выводит в терминал
-void show_results(double t_0, double t_max, double h, double target_error,
-                  double error, double steps,
+void show_results(Config cfg, double error, double steps,
                   std::chrono::milliseconds elapsed_time, Eigen::MatrixXd& P) {
     fs::path folder_path = "results";
     fs::path result_file_path = folder_path / "output.txt";
@@ -120,8 +87,9 @@ void show_results(double t_0, double t_max, double h, double target_error,
     std::ofstream out(result_file_path);
 
     if (out.is_open()) {
-        out << "t = " << t_0 << " ; t_end = " << t_max << " ; h = " << h
-            << " ; error_value = " << target_error << "\n"
+        out << cfg.method << " ; t = " << cfg.t0 << " ; t_end = " << cfg.t_max
+            << " ; h = " << cfg.h << " ; error_value = " << cfg.target_error
+            << "\n"
             << "error = " << error << " ; last_step = " << steps
             << "\ntime: " << elapsed_time.count() / 1000 << " sec. "
             << elapsed_time.count() % 1000 << " ms."
@@ -133,8 +101,9 @@ void show_results(double t_0, double t_max, double h, double target_error,
     }
 
     std::cout << "\033[2J\033[H\nИсходные данные: ";
-    std::cout << "t = " << t_0 << " ; t_end = " << t_max << " ; h = " << h
-              << " ; error_value = " << target_error << "\n";
+    std::cout << cfg.method << "; t = " << cfg.t0 << " ; t_end = " << cfg.t_max
+              << " ; h = " << cfg.h << " ; error_value = " << cfg.target_error
+              << "\n";
     std::cout << "Последняя ошибка = " << error << " ; Шаг = " << steps << "\n";
     std::cout << "\033[32mMатрица P записана в output.txt\033[0m\n";
     std::cout << "Время работы программы: " << elapsed_time.count() / 1000
@@ -160,18 +129,6 @@ void draw_graph(std::vector<double>* error) {
     pclose(gnuplot);
 }
 
-// Параметры программы при запуске
-void set_flags(int argc, char* argv[]) {
-    for (int i = 1; i < argc; i++) {
-        std::string arg = argv[i];
-        if (arg == "draw") {
-            draw = true;
-        } else if (arg == "manual") {
-            manual = true;
-        }
-    }
-}
-
 void check_nan(const Eigen::MatrixXd& P, int step, double t) {
     if (std::isnan(P(0, 0))) {
         std::string message =
@@ -179,4 +136,40 @@ void check_nan(const Eigen::MatrixXd& P, int step, double t) {
             " | t : " + std::to_string(t) + "\n";
         throw std::runtime_error(message);
     }
+}
+
+Config parse_cli(int argc, char** argv) {
+    Config opts;
+    CLI::App app{"Riccati Equation Solver"};
+
+    app.add_option("--method", opts.method,
+                   "Метод решения (runge, adams, felberg, inglend, milna, "
+                   "nystrom, hemming)");
+    // app.add_option("--input", opts.input_dir,
+    //                "Путь к входным данным (по умолчанию ./data)");
+    app.add_option("--h", opts.h, "Шаг интегрирования >= 0");
+    app.add_option("--t0", opts.t0, "Начальное время (по умолчанию 0)");
+    app.add_option("--t_max", opts.t_max, "Конечное время (по умолчанию 10)");
+    app.add_option("--error", opts.target_error,
+                   "Требуемая погрешность (по умолчанию 0.001)");
+    app.add_option("--max_steps", opts.max_steps,
+                   "Максимум шагов (по умолчанию 200)");
+    app.add_option("--threads", opts.threads,
+                   "Количество потоков (по умолчанию 1)\n"
+                   "Для небольших матриц большое кол-во потоков негативно "
+                   "повлияют на скорость.");
+    app.add_flag("--draw", opts.draw,
+                 "Рисовать график ошибки (использует gnuplot)");
+    app.add_flag("--manual", opts.manual, "Пошаговое выполнение вычислений");
+    app.add_flag("--step_time", opts.step_time,
+                 "Отображать время выполнения одного шага");
+
+    try {
+        app.parse(argc, argv);
+    } catch (const CLI::ParseError& e) {
+        app.exit(e);
+        exit(1);
+    }
+
+    return opts;
 }

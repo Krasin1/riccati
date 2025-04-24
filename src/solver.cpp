@@ -1,14 +1,12 @@
-#include "solver.hpp"
+#include "include/solver.hpp"
 
 #include <Eigen/Dense>
+#include <deque>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 
-#include "func.hpp"
-extern bool draw;
-
-namespace fs = std::filesystem;
+#include "include/utils.hpp"
 
 // Наше матричное уравнение Риккати
 inline Eigen::MatrixXd RiccatiSolver::riccati_equation(
@@ -16,32 +14,46 @@ inline Eigen::MatrixXd RiccatiSolver::riccati_equation(
     return E_ * P * A_ + A_.transpose() * P * E_ + Q_ - E_ * P * BRB_ * P * E_;
 }
 
-Result RiccatiSolver::solve(double t0, double t_max, double h,
-                            double target_error, int max_steps) {
+Result RiccatiSolver::solve(Config cfg) {
     Eigen::MatrixXd P = initial_P_;
     Eigen::MatrixXd P_previous = P;
     int step = 0;
     double error = std::numeric_limits<double>::max();
 
     // если draw == true, то сохраняем точки для графика
-    std::vector<double>* points = draw ? new std::vector<double>() : nullptr;
+    std::vector<double>* points =
+        cfg.draw ? new std::vector<double>() : nullptr;
 
-    while (step < max_steps && error > target_error) {
-        std::deque<Eigen::MatrixXd> prev_points = acceleration_points(4, h, P);
+    std::chrono::time_point<std::chrono::system_clock> begin, end;
+
+    while (step < cfg.max_steps && error > cfg.target_error) {
+        std::deque<Eigen::MatrixXd> prev_points =
+            acceleration_points(4, cfg.h, P);
+
+        if (cfg.step_time) begin = std::chrono::system_clock::now();
 
         P_previous = P;
-        for (double t = t0; t < t_max; t += h) {
-            progress(target_error, error, t, h, step, t_max, P);
+        for (double t = cfg.t0; t < cfg.t_max; t += cfg.h) {
+            progress(cfg, error, step, t, P);
 
-            P = update_step(P, h, prev_points);
+            P = update_step(P, cfg.h, prev_points);
             check_nan(P, step, t);
 
             // prev_points.pop_back();
             // prev_points.push_front(P);
         }
         error = (P - P_previous).norm();
+
         // значение ошибки на каждом шагу для графика
-        if (draw) points->push_back(error);
+        if (cfg.draw) points->push_back(error);
+
+        if (cfg.step_time) {
+            end = std::chrono::system_clock::now();
+            auto duration =
+                std::chrono::duration_cast<std::chrono::milliseconds>(end -
+                                                                      begin);
+            std::cout << duration.count() << "ms\n";
+        }
 
         step++;
     }
@@ -52,6 +64,7 @@ Result RiccatiSolver::solve(double t0, double t_max, double h,
 
 // Найденную матрицу подставляем в уравнение Риккати и выводим в файл
 Eigen::MatrixXd RiccatiSolver::verify_solution(const Eigen::MatrixXd& P) {
+    namespace fs = std::filesystem;
     Eigen::MatrixXd P_verified = riccati_equation(P);
 
     fs::path folder_path = "results";
@@ -70,7 +83,8 @@ Eigen::MatrixXd RiccatiSolver::verify_solution(const Eigen::MatrixXd& P) {
     return riccati_equation(P);
 }
 
-// С помощью метода Рунге-Кутты получаем начальные точки для некоторых методов
+// С помощью метода Рунге-Кутты получаем начальные точки для некоторых
+// методов
 std::deque<Eigen::MatrixXd> RiccatiSolver::acceleration_points(
     int count, double h, Eigen::MatrixXd& P_initial) {
     std::deque<Eigen::MatrixXd> result;

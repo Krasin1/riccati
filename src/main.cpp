@@ -1,18 +1,15 @@
 #include <iostream>
-#include <thread>
 
-#include "core/func.hpp"
-#include "methods/methods.hpp"
-
-bool draw = false;
-bool manual = false;
+#include "include/fabric.hpp"
+#include "include/utils.hpp"
 
 int main(int argc, char* argv[]) {
     try {
-        set_flags(argc, argv);
+        // Параметры интегрирования из параметров
+        Config cfg = parse_cli(argc, argv);
 
         // включаем многопоток
-        Eigen::setNbThreads(std::thread::hardware_concurrency());
+        Eigen::setNbThreads(cfg.threads);
 
         Eigen::MatrixXd E = read_matrix_from_file("data/E.dat");
         Eigen::MatrixXd A = read_matrix_from_file("data/A.dat");
@@ -20,31 +17,21 @@ int main(int argc, char* argv[]) {
         Eigen::MatrixXd Q = read_matrix_from_file("data/Q.dat");
         Eigen::MatrixXd initial_P = Eigen::MatrixXd::Zero(E.rows(), E.cols());
 
-        // Параметры интегрирования
-        double t0 = 0.0;
-        double t_max = 10.0;
-        double h = 0.1;
-        double target_error = 0.001;
-        int max_steps = 200;
-
-        // ввод из терминала
-        input_data(t0, t_max, h, target_error);
-
         // Список методов
-        //  - FelbergSolver
-        //  - InglendSolver
-        //  - NystromSolver
-        //  - HemmingSolver
-        //  - RungeKuttaSolver
-        //  - AdamsSolver
-        //  - MilnaSolver
-        FelbergSolver solver(E, A, B, Q, initial_P);
+        //  - runge
+        //  - adams
+        //  - milna
+        //  - nystrom
+        //  - hemming
+        //  - inglend
+        //  - felberg
+        auto solver = create_solver(cfg.method, E, A, B, Q, initial_P);
 
         // Замеры времени
         auto begin = std::chrono::system_clock::now();
 
         // Решаем
-        Result result = solver.solve(t0, t_max, h, target_error, max_steps);
+        Result result = solver->solve(cfg);
 
         auto end = std::chrono::system_clock::now();
         auto duration =
@@ -52,14 +39,13 @@ int main(int argc, char* argv[]) {
 
         // Подставляем найденную матрицу в уравнение риккати -> ответ записываем
         // в файл
-        solver.verify_solution(result.P);
+        solver->verify_solution(result.P);
 
-        // результаты находятся в папке Results
-        show_results(t0, t_max, h, target_error, result.last_error, result.step,
-                     duration, result.P);
+        // результаты находятся в папке results
+        show_results(cfg, result.last_error, result.step, duration, result.P);
 
         // Рисуем график если передали агрумент draw при запуске программы
-        if (draw) draw_graph(result.points);
+        if (cfg.draw) draw_graph(result.points);
     } catch (std::exception& e) {
         std::cout << e.what() << '\n';
     }

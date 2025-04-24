@@ -4,13 +4,7 @@
 #include <Eigen/Dense>
 #include <deque>
 
-// Структура для хранения результата
-struct Result {
-    Eigen::MatrixXd P;
-    int step;
-    double last_error;
-    std::vector<double>* points;
-};
+#include "utils.hpp"
 
 // Абстрактный базовый класс для решателей уравнения Риккати
 class RiccatiSolver {
@@ -23,8 +17,7 @@ class RiccatiSolver {
         this->Q_ = Q;
         this->initial_P_ = initial_P;
     }
-    Result solve(double t0, double t_max, double h, double target_error,
-                 int max_steps);
+    Result solve(Config cfg);
 
     // Наше матричное уравнение Риккати
     virtual Eigen::MatrixXd riccati_equation(const Eigen::MatrixXd& P);
@@ -47,11 +40,6 @@ class RiccatiSolver {
     virtual Eigen::MatrixXd update_step(
         const Eigen::MatrixXd& P, double h,
         const std::deque<Eigen::MatrixXd>& prev_points) = 0;
-
-    virtual std::deque<Eigen::MatrixXd> get_acceleration_points(
-        int count, double h, Eigen::MatrixXd& P_initial) {
-        return {};
-    }
 };
 
-#endif  // SOLVER_HPP
+#endif
