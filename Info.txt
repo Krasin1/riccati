@@ -5,6 +5,8 @@
     eigen - для работы с матрицами, если не установлен, то должен будет скачаться при сборке
     git - чтобы скачать eigen если он не установлен
     openmp - для параллельного вычисления
+    gnuplot - для вывода графиков
+    cli11 - для обработки параметров из командной строки
 
 Чтобы получить исполняемый файл нужно запустить 
     ./build.sh
@@ -12,13 +14,8 @@
 Чтобы запустить программу :
     ./solver
 
-Программу можно скомпилировать этой командой
-    g++ -std=c++17 -O3 -fopenmp -I/path/to/eigen -o solver main.cpp functions/func.cpp methods/solver.cpp methods/runge/runge.cpp methods/adams/adams.cpp methods/felberg/felberg.cpp methods/hemming/hemming.cpp methods/inglend/inglend.cpp methods/milna/milna.cpp methods/nystrom/nystrom.cpp
-
-Где 
-    -fopenmp - флаг для добавления многопоточности
-    -I/path/to/eigen - путь к папке c eigen
-
+Чтобы посмотреть доступные настройки
+    ./solver --help
 
 Матрицы должны лежать по пути относительно исполняемого файла:
     data/A.dat

@@ -16,7 +16,7 @@ struct Config {
     bool draw = false;
     bool manual = false;
     bool step_time = false;
-    std::string method = "runge";
+    std::string method = "runge4";
 };
 
 // Структура для хранения результата

@@ -94,6 +94,7 @@ void show_results(Config cfg, double error, double steps,
             << "\ntime: " << elapsed_time.count() / 1000 << " sec. "
             << elapsed_time.count() % 1000 << " ms."
             << "\n\n";
+        out << std::fixed << std::setprecision(4);
         out << P << "\n";
         out.close();
     } else {
@@ -143,8 +144,14 @@ Config parse_cli(int argc, char** argv) {
     CLI::App app{"Riccati Equation Solver"};
 
     app.add_option("--method", opts.method,
-                   "Метод решения (runge, adams, felberg, inglend, milna, "
-                   "nystrom, hemming)");
+                   "Метод решения (runge3, runge4, runge5, "
+                   "adams3, adams4, adams5, "
+                   "milna4, milna6, "
+                   "nystrom2, nystrom3, nystrom4, "
+                   "felberg4, felberg5, "
+                   "inglend4, inglend5, "
+                   "hemming4)")
+        ->required();
     // app.add_option("--input", opts.input_dir,
     //                "Путь к входным данным (по умолчанию ./data)");
     app.add_option("--h", opts.h, "Шаг интегрирования >= 0");
@@ -163,6 +170,11 @@ Config parse_cli(int argc, char** argv) {
     app.add_flag("--manual", opts.manual, "Пошаговое выполнение вычислений");
     app.add_flag("--step_time", opts.step_time,
                  "Отображать время выполнения одного шага");
+
+    if (argc < 2) {
+        std::cout << app.help() << "\n";
+        exit(0);
+    }
 
     try {
         app.parse(argc, argv);

@@ -19,6 +19,7 @@ class RiccatiSolver {
     }
     Result solve(Config cfg);
 
+    int get_acceleration_points(const std::string& method);
     // Наше матричное уравнение Риккати
     virtual Eigen::MatrixXd riccati_equation(const Eigen::MatrixXd& P);
     // Найденную матрицу подставляем в уравнение Риккати и выводим в файл
