@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
         show_results(cfg, result.last_error, result.step, duration, result.P);
 
         // Рисуем график если передали агрумент draw при запуске программы
-        if (cfg.draw) draw_graph(result.points);
+        if (cfg.draw) draw_graph(result.points, cfg);
     } catch (std::exception& e) {
         std::cout << e.what() << '\n';
     }

@@ -112,12 +112,18 @@ void show_results(Config cfg, double error, double steps,
 }
 
 // Рисует график если флаг draw == true
-void draw_graph(std::vector<double>* error) {
+void draw_graph(std::vector<double>* error, Config cfg) {
     FILE* gnuplot = popen("gnuplot -persist", "w");
     if (!gnuplot) {
         std::cerr << "gnuplot не удалось запустить\n";
         return;
     }
+
+    fs::path folder = "results/png";
+    if (!fs::exists(folder)) fs::create_directory(folder);
+
+    fprintf(gnuplot, "set terminal pngcairo\n");
+    fprintf(gnuplot, "set output 'results/png/%s.png'\n", cfg.method.c_str());
     fprintf(gnuplot, "set title \"Ошибка на каждом шаге\"\n");
     fprintf(gnuplot, "set xlabel 'Шаги'\n");
     fprintf(gnuplot, "set ylabel 'Ошибка'\n");
@@ -127,6 +133,7 @@ void draw_graph(std::vector<double>* error) {
         fprintf(gnuplot, "%ld %f\n", i, error->at(i));
     }
     fprintf(gnuplot, "e\n");
+    fprintf(gnuplot, "set output\n");
     pclose(gnuplot);
 }
 
@@ -144,7 +151,7 @@ Config parse_cli(int argc, char** argv) {
     CLI::App app{"Riccati Equation Solver"};
 
     app.add_option("--method", opts.method,
-                   "Метод решения (runge3, runge4, runge5, "
+                   "Метод решения (runge3, runge4,"
                    "adams3, adams4, adams5, "
                    "milna4, milna6, "
                    "nystrom2, nystrom3, nystrom4, "

@@ -40,7 +40,7 @@ void show_results(Config cfg, double error, double steps,
                   std::chrono::milliseconds elapsed_time, Eigen::MatrixXd& P);
 
 // Построение графика ошибки (если разрешено)
-void draw_graph(std::vector<double>* error);
+void draw_graph(std::vector<double>* error, Config cfg);
 
 // Проверка на NaN в матрице
 void check_nan(const Eigen::MatrixXd& P, int step, double t);
