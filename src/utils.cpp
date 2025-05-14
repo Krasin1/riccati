@@ -16,30 +16,85 @@ Eigen::MatrixXd read_matrix_from_file(const std::string& filepath) {
     if (!file.is_open()) {
         throw std::runtime_error("Не удалось открыть файл " + filepath);
     }
+
     std::vector<std::vector<double>> data;
     std::string line;
+    size_t cols = 0;  // Количество столбцов (определяется по первой строке)
+
     while (std::getline(file, line)) {
+        // Пропускаем пустые строки
+        if (line.empty()) continue;
+
         std::istringstream iss(line);
         std::vector<double> row;
-        double value;
-        while (iss >> value) row.push_back(value);
-        if (!row.empty()) data.push_back(row);
+        std::string token;
+
+        while (iss >> token) {
+            // Проверяем, что число состоит только из цифр, знака и точек 
+            bool is_valid = !token.empty();
+            bool has_digit = false;
+            size_t sign_pos = (token[0] == '-' || token[0] == '+') ? 1 : 0;
+            size_t dot_count = 0;
+
+            for (size_t i = sign_pos; i < token.size(); ++i) {
+                if (token[i] == '.') {
+                    dot_count++;
+                    // Не больше одной точки в числе
+                    if (dot_count > 1) {
+                        is_valid = false;
+                        break;
+                    }
+                } else if (!isdigit(token[i])) {
+                    is_valid = false;
+                    break;
+                } else {
+                    has_digit = true;
+                }
+            }
+
+            if (!is_valid || !has_digit) {
+                throw std::runtime_error("Обнаружен лишний символ: " + token);
+            }
+
+            try {
+                double value = std::stod(token);
+                row.push_back(value);
+            } catch (...) {
+                throw std::runtime_error("Ошибка обработки: " + token);
+            }
+        }
+
+        if (row.empty()) {
+            continue;  // Пропускаем строки без чисел 
+        }
+
+        // Проверяем согласованность количества столбцов
+        if (cols == 0) {
+            cols = row.size();
+        } else if (row.size() != cols) {
+            throw std::runtime_error("Несовпадение количества столбцов в строке: " + line);
+        }
+
+        data.push_back(row);
     }
+
     file.close();
 
     if (data.empty()) {
-        throw std::runtime_error("Файл " + filepath +
-                                 " пустой или содержит неверные данные.");
+        throw std::runtime_error("Файл " + filepath + " не содержит числовых данных.");
     }
 
-    Eigen::MatrixXd mat(data.size(), data[0].size());
+    // Преобразуем в Eigen::MatrixXd
+    Eigen::MatrixXd mat(data.size(), cols);
     for (size_t i = 0; i < data.size(); ++i) {
         for (size_t j = 0; j < data[i].size(); ++j) {
-            mat((long)i, (long)j) = data[i][j];
+            mat(static_cast<long>(i), static_cast<long>(j)) = data[i][j];
         }
     }
+
     return mat;
 }
+
 // Вывод прогресса раз в 2 секунды
 void progress(Config cfg, double error, int step, double t,
               Eigen::MatrixXd& P) {
@@ -94,7 +149,7 @@ void show_results(Config cfg, double error, double steps,
             << "\ntime: " << elapsed_time.count() / 1000 << " sec. "
             << elapsed_time.count() % 1000 << " ms."
             << "\n\n";
-        out << std::fixed << std::setprecision(4);
+        out << std::fixed << std::setprecision(7);
         out << P << "\n";
         out.close();
     } else {
