@@ -17,14 +17,7 @@ int main(int argc, char* argv[]) {
         Eigen::MatrixXd Q = read_matrix_from_file("data/Q.dat");
         Eigen::MatrixXd initial_P = Eigen::MatrixXd::Zero(E.rows(), E.cols());
 
-        // Список методов
-        //  - runge
-        //  - adams
-        //  - milna
-        //  - nystrom
-        //  - hemming
-        //  - inglend
-        //  - felberg
+        // создает solver с переданным методом
         auto solver = create_solver(cfg.method, E, A, B, Q, initial_P);
 
         // Замеры времени

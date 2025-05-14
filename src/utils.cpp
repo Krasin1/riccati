@@ -159,8 +159,6 @@ Config parse_cli(int argc, char** argv) {
                    "inglend4, inglend5, "
                    "hemming4)")
         ->required();
-    // app.add_option("--input", opts.input_dir,
-    //                "Путь к входным данным (по умолчанию ./data)");
     app.add_option("--h", opts.h, "Шаг интегрирования >= 0");
     app.add_option("--t0", opts.t0, "Начальное время (по умолчанию 0)");
     app.add_option("--t_max", opts.t_max, "Конечное время (по умолчанию 10)");
