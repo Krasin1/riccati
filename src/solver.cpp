@@ -17,7 +17,7 @@ inline Eigen::MatrixXd RiccatiSolver::riccati_equation(
 int RiccatiSolver::get_acceleration_points(const std::string& method) {
     if (method == "runge3" || method == "runge4" || method == "felberg4" ||
         method == "felberg5" || method == "inglend4" || method == "inglend5") {
-        return 1;
+        return 0;
     }
 
     if (method == "adams3") return 3;
